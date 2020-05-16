@@ -28,6 +28,7 @@ class usersController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api')->except('store');
+        $this->middleware('adminAuth')->only('index');
     }
 
     public function index(Request $request)
@@ -65,6 +66,7 @@ class usersController extends Controller
         $input = $request->all();
         $input['userId'] = $this->userSelect($input['user_type']);
         $input['password'] = Hash::make($input['password']);
+        $input['nic'] = strtolower($input['nic']);
         $user =  User::create($input);
         $user->userId = $this->userSelect($input['user_type']).'0'.$user->id ;
         $accesstoken = $user->createToken('authToken')->accessToken;
@@ -122,6 +124,7 @@ class usersController extends Controller
         }
 
         try {
+
             $user->update([
                 'name' => $request->name,
                 'email' => $request->email,

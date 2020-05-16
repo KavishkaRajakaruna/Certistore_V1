@@ -21,4 +21,5 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::prefix('v1')->group(function(){
     Route::apiResource('users' , 'v1\usersController');
     Route::apiResource('certificates' , 'v1\certificatesController');
+    Route::post('/users/login', 'v1\userLogin');
 });

@@ -15,9 +15,10 @@ class adminAuth
      */
     public function handle($request, Closure $next)
     {
-        if ($request->id != '16apc2739 || 16apc2763' ){
+        if ($request->user()->user_type != 'admin' ){
             return response() ->json([
-                'message' => 'user not authorized'
+                'message' => 'user not authorized',
+
             ], 401);
         }
         return $next($request);
