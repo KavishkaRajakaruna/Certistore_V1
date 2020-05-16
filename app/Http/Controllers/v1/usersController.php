@@ -24,16 +24,18 @@ class usersController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
+
     public function __construct()
     {
         $this->middleware('auth:api')->except('store');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $user = User::paginate(20);
+
+        $users = User::paginate(20);
         return response() ->json([
-           $user,
+           $users,
             'message' => 'success',
         ], 200);
     }
