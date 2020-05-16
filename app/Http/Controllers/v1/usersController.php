@@ -8,7 +8,9 @@ use App\Events\NewUserCreated;
 use App\Events\NewUserCreatedEvent;
 use App\Http\Controllers\Controller;
 use App\User;
+use http\Env\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Validator;
@@ -22,6 +24,11 @@ class usersController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
+    public function __construct()
+    {
+        $this->middleware('auth:api')->except('store');
+    }
+
     public function index()
     {
         $user = User::paginate(20);
@@ -77,9 +84,18 @@ class usersController extends Controller
      */
     public function show(User $user)
     {
-        return response()->json([
-            'user' => $user,
-        ], 200);
+        if(Auth::id() == $user->id){
+            return response()->json([
+                'user' => $user,
+            ], 200);
+        } else{
+            return response()->json([
+                'message' => "User Unauthorized",
+
+            ],401);
+        }
+
+
     }
 
     /**
