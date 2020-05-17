@@ -116,30 +116,23 @@ class usersController extends Controller
                 $request->request,
             ], 401);
         }
+        try {
 
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
+            return response()->json([
+                'message' => 'user ' . $user->name . ' updated'
 
-            if(Auth::id()!= $user->id){
-                return response()->json([
-                    'message' => 'user unauthorized',
-                ], 401);
-            }else {
-                try {
-
-                    $user->update([
-                        'name' => $request->name,
-                        'email' => $request->email,
-                    ]);
-                    return response()->json([
-                        'message' => 'user ' . $user->name . ' updated'
-
-                    ], 200);
-                } catch (Exception $e) {
-                    return response()->json([
-                        'error' => $e
-                    ], 500);
-                }
-            }
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => $e
+            ], 500);
+             }
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -149,17 +142,12 @@ class usersController extends Controller
      */
     public function destroy(User $user)
     {
-        if(Auth::id()!=$user->id){
-            return response()->json([
-                'message' => 'not authorized',
-            ],401);
-        }else{
-            $user->delete();
-            return response()->json([
-                'message' => 'Deletion Success',
-                'duration' => '7',
-            ],200);
-        }
+        $user->delete();
+        return response()->json([
+            'message' => 'Deletion Success',
+            'duration' => '7',
+        ],200);
+
 
     }
 
