@@ -29,6 +29,7 @@ class usersController extends Controller
     {
         $this->middleware('auth:api')->except('store');
         $this->middleware('adminAuth')->only('index');
+        $this->middleware('ownerAuth')->except('index', 'store');
 
     }
 
@@ -89,18 +90,9 @@ class usersController extends Controller
      */
     public function show(User $user)
     {
-        if(Auth::id() == $user->id){
             return response()->json([
                 'user' => $user,
             ], 200);
-        } else{
-            return response()->json([
-                'message' => "User Unauthorized",
-
-            ],401);
-        }
-
-
     }
 
     /**
