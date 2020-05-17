@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\Storage;
 
 class certificatesController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+        $this->middleware('adminAuth');
+    }
+
     /**
      * Display a listing of the resource.
      *
