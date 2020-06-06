@@ -28,7 +28,7 @@ class CreateUserDiretoryListener
      */
     public function handle(NewUserCreatedEvent $event)
     {
-        $user = User::find($event->user->id);
+//        $user = User::find($event->user->id);
         Storage::makeDirectory('/userAssets/'. $event->user->userId, 0777, true);
         Storage::makeDirectory('/userAssets/'.$event->user->userId.'/profile' ,0777,true);
         Storage::makeDirectory('/userAssets/'.$event->user->userId.'/certificates', 0777,true);

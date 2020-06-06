@@ -8,12 +8,15 @@ use App\Events\NewUserCreated;
 use App\Events\NewUserCreatedEvent;
 use App\Http\Controllers\Controller;
 use App\User;
+use App\activateUser;
 use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Validator;
+use App\Notifications\verifyEmail;
+use Illuminate\Support\Str;
 
 
 
@@ -27,9 +30,9 @@ class usersController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:api')->except('store');
+        $this->middleware('auth:api')->except('store', 'signupActivate');
         $this->middleware('adminAuth')->only('index');
-
+        $this->middleware('accountActivate')->except('store', 'signupActivate');
     }
 
     public function index(Request $request)
@@ -69,11 +72,21 @@ class usersController extends Controller
         $input['password'] = Hash::make($input['password']);
         $input['nic'] = strtolower($input['nic']);
         $user =  User::create($input);
-        $user->userId = $this->userSelect($input['user_type']).'0'.$user->id ;
+        $userId = $this->userSelect($input['user_type']).'0'.$user->id ;
+        $user->update(['userId' => $userId]);
         $accesstoken = $user->createToken('authToken')->accessToken;
         event(new NewUserCreatedEvent($user));
 
+//User Activation email verify________
+        $activation = new activateUser([
+            'uid' => $user->id,
+            'activation_token' => Str::random(60),
+        ]);
+        $activation ->save();
 
+        $user->notify(new verifyEmail($activation));
+
+//------------------------------
         return response()->json([
             'user' => $user,
             'message' => 'User created ',
@@ -189,5 +202,21 @@ class usersController extends Controller
             return 'R';
         else
             return 'I';
+    }
+
+    public function signupActivate($token){
+        $token = activateUser::where('activation_token', $token)->first();
+        activateUser::where('uid' , $token->id)->delete();
+        if(!$token){
+            return response()->json([
+               'message'=> 'Activation token invalied'
+            ], 404);
+        }
+        User::where('id', $token->uid)
+            ->update(['active'=> true]);
+//        return response()->json([
+//            'message' => 'Activation successful'
+//        ], 200);
+        // Put redirect
     }
 }

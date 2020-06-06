@@ -21,8 +21,8 @@ class userLogIn extends Controller
     public function __invoke(Request $request)
     {
         if(Auth::attempt(['email'=> request('email'), 'password' => request('password')])){
-            $user= Auth::user();
-            $accessToken = Auth::User()->createToken('authToken')->accessToken;
+            $user= Auth::User();
+            $accessToken = Auth::user()->createToken('authToken')->accessToken;
             $this->activeUsers($user->id);
             return response() ->json([
                'user'=>$user,

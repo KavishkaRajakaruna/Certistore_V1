@@ -4,29 +4,42 @@ namespace App\Http\Controllers\v1;
 
 use App\Certificate;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\v1\certificateResourcesCollection;
+use App\Http\Resources\Api\v1\certificateResources;
 use Brick\Math\Exception\DivisionByZeroException;
-use Dotenv\Validator;
 use App\User;
+//use Defuse\Crypto\File;
+use Illuminate\Http\File;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Validator;
 
 class certificatesController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth:api');
-        $this->middleware('adminAuth');
+        $this->middleware('adminAuth')->only('index');
     }
 
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse|object
      */
     public function index()
     {
-        //
+        try {
+            return (new certificateResourcesCollection(Certificate::paginate()))
+                ->response()
+                ->setStatusCode(200);
+        } catch (Execption $exception){
+            return response() ->json([
+                'message' => 'Internal Error'
+            ], 500);
+        }
     }
 
     /**
@@ -37,8 +50,7 @@ class certificatesController extends Controller
      */
     public function store(Request $request)
     {
-        $validation = $request->validate([
-            'user' => 'required', //user id gets
+        $validator = Validator::make($request->all(),[
             'certiName' => 'required',
             'source' => 'required',
             'type' => 'required',
@@ -46,17 +58,15 @@ class certificatesController extends Controller
             'file' => 'required|mimes:jpg,jpeg|max:5000',
         ]);
 
-        if ($validation->fails()){
-            return response() -> json(['error' => $validation->errors()], 401);
+        if ($validator->fails()){
+            return response()->json(['error' => $validator->errors()], 401);
         }
 
-        $user = User::where('id' , $request->user)->get();
-//userId= R03 is the reference for the user
         try {
-            $path = Storage::putFile('/userAssets/'.$user[0]->userId.'/certificates'.$request->file('file'));
+            $path = Storage::putFile('/userAssets/'.$request->user()->userId.'/certificates',new File($request->file));
             $certificate = new Certificate($request->all());
             $certificate->location = $path;
-            $certificate->user_id= $user[0]->id;
+            $certificate->user_id= $request->user()->id;
             $certificate->save();
             return response()->json([
                 'messsage' => 'File upload success'
@@ -72,11 +82,31 @@ class certificatesController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Certificate  $certificate
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse|object
      */
-    public function show(Certificate $certificate)
-    {
-        //
+    public function show(){
+//    {   $a = 0;
+//        $certificates= Certificate::find('user_id', Auth::id() );
+//        foreach ($certificates as $viewCertificate){
+//            $url = Storage::temporyUrl($viewCertificate->location, now()->addMinutes(30));
+        if (Certificate::where('user_id', Auth::id() )->count() == 1){
+            return (new certificateResources(certificate::where('user_id', Auth::id())->first()))
+                                            ->response()
+                                            -> setStatusCode('200');
+        }
+        elseif (Certificate::where('user_id', Auth::id())->count() > 1){
+            return (new certificateResourcesCollection(Certificate::where('user_id', Auth::id())))
+                ->response()
+                ->setStatusCode('200');
+        }
+        else{
+            return response() ->json([
+                'message' => ' No records'
+            ],200);
+        }
+
+
+
     }
 
     /**
@@ -89,7 +119,7 @@ class certificatesController extends Controller
     public function update(Request $request, Certificate $certificate)
     {
         $validator = Validator::make($request->all(), [
-            'userId' => 'required',
+            //'userId' => 'required',
             'certiName'=> 'required',
             'source' => 'required',
             'type' => 'required',
@@ -156,7 +186,7 @@ class certificatesController extends Controller
 
          return response()->json(
              ['message' => 'Share successful',
-         200]);
+         ],200);
      }
     //function to reduce points upon upload/share
     //$id => User ID , $amount=> number of shares or uploads , $method =>upload / share
