@@ -5,7 +5,7 @@ namespace App\Http\Controllers\v1;
 use App\Certificate;
 use App\Http\Controllers\Controller;
 use Brick\Math\Exception\DivisionByZeroException;
-use Dotenv\Validator;
+use Validator;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +15,8 @@ class certificatesController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api');
-        $this->middleware('adminAuth');
+//        $this->middleware('auth:api');
+//        $this->middleware('adminAuth');
     }
 
     /**
@@ -37,17 +37,17 @@ class certificatesController extends Controller
      */
     public function store(Request $request)
     {
-        $validation = $request->validate([
-            'user' => 'required', //user id gets
-            'certiName' => 'required',
+        $validator = Validator::make($request->all(), [
+            'userId' => 'required',
+            'certiName'=> 'required',
             'source' => 'required',
             'type' => 'required',
             'level' => 'required',
             'file' => 'required|mimes:jpg,jpeg|max:5000',
         ]);
 
-        if ($validation->fails()){
-            return response() -> json(['error' => $validation->errors()], 401);
+        if ($validator->fails()){
+            return response() -> json(['error' => $validator->errors()], 401);
         }
 
         $user = User::where('id' , $request->user)->get();
@@ -59,7 +59,8 @@ class certificatesController extends Controller
             $certificate->user_id= $user[0]->id;
             $certificate->save();
             return response()->json([
-                'messsage' => 'File upload success'
+                'message' => 'File upload success',
+//                'certificate' => $request
             ], 200);
         } catch(Exception $exception){
             return response() ->json([

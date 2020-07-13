@@ -57,7 +57,7 @@ class usersController extends Controller
             'nic' => 'required',
             'email' => 'required|email|unique:users',
             'user_type' => 'required',
-            'password' => 'required',
+            'password' => 'required|string',
             'c_password' => 'required|same:password'
         ]);
         if ($validator->fails()){

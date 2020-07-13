@@ -23,3 +23,9 @@ Route::prefix('v1')->group(function(){
     Route::apiResource('certificates' , 'v1\certificatesController');
     Route::post('/users/login', 'v1\userLogin');
 });
+
+Route::prefix('v1/password')->group(function (){
+    Route::post('request', 'v1\passwordResetsController@create');
+    Route::get('find/{$token}', 'v1\passwordResetsController@find');
+    Route::post('reset', 'v1\passwordResetsController@update');
+});
